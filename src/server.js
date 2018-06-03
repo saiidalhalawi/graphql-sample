@@ -3,59 +3,111 @@ import graphqlHTTP from 'express-graphql';
 import { buildSchema } from 'graphql';
 
 const schema = buildSchema(`
-  input MessageInput {
-    content: String
-    author: String
+  type Person {
+    id: ID!
+    name: String
+    nicknames: [String]
+    born_around: Int
+    died_around: Int
+    houses: [House]
+    titles: [Title]
+    father: Person
+    mother: Person
+    issues: [Person]
   }
 
-  type Message {
+  type Title {
     id: ID!
-    content: String
-    author: String
+    name: String
+  }
+
+  type House {
+    id: ID!
+    name: String
   }
 
   type Query {
-    getMessage(id: ID!): Message
-  }
-
-  type Mutation {
-    createMessage(input: MessageInput): Message
-    updateMessage(id: ID!, input: MessageInput): Message
+    people: [Person]
+    personByName(name: String!): Person
+    title(name: String): Title
   }
 `);
 
-class Message {
-  constructor(id, {content, author}) {
-    this.id = id;
-    this.content = content;
-    this.author = author;
+const people = {
+  'Hugh Capet': {
+    name: 'Hugh Capet',
+    nicknames: [],
+    born_around: 939,
+    died_around: 996,
+    houses: ['Robertiens', 'House of Capet'],
+    titles: ['King of Franks'],
+    father: null,
+    mother: null,
+    issues: ['Robert II']
+  },
+  'Robert II': {
+    name: 'Robert II',
+    nicknames: ['the Pious', 'the Wise'],
+    born_around: 972,
+    died_around: 1031,
+    houses: ['House of Capet'],
+    titles: ['King of Franks', 'Duke of Burgundy'],
+    father: 'Hugh Capet',
+    mother: 'Adelaide of Aquitaine.',
+    issues: ['Henry I']
+  },
+  'Henry I of France': {
+    name: 'Henry I of France',
+    nicknames: [],
+    born_around: 1008,
+    died_around: 1060,
+    houses: ['House of Capet'],
+    titles: ['King of Franks', 'Duke of Burgundy'],
+    father: 'Robert II',
+    mother: 'Constance of Arles',
+    issues: ['Philip I of France']
+  },
+  'Philip I of France': {
+    name: 'Philip I of France',
+    nicknames: ['the Amorous'],
+    born_around: 1052,
+    died_around: 1108,
+    houses: ['House of Capet'],
+    titles: ['King of Franks'],
+    father: 'Henry I of France',
+    mother: '	Anne of Kiev',
+    issues: ['Louis VI of France']
+  }
+};
+
+class Person {
+  constructor(p) {
+    this.name = p.name;
+    this.nicknames = p.nicknames;
+    this.born_around = p.born_around;
+    this.died_around = p.died_around;
+    this.houses = p.houses;
+    this.titles = p.titles;
+    this.father = p.father;
+    this.mother = p.mother;
+    this.issues = p.issues;
   }
 }
 
-let fakeDatabase = {};
-
 const root = {
-  getMessage: function ({id}) {
-    if (!fakeDatabase[id]) {
-      throw new Error('no message exists with id ' + id);
+  people: () => {
+    let result = []
+    for (let name in people) {
+      result.push(new Person(people[name]))
     }
-    return new Message(id, fakeDatabase[id]);
+    return result;
   },
-  createMessage: function ({input}) {
-    // Create a random id for our "database".
-    var id = require('crypto').randomBytes(10).toString('hex');
-
-    fakeDatabase[id] = input;
-    return new Message(id, input);
-  },
-  updateMessage: function ({id, input}) {
-    if (!fakeDatabase[id]) {
-      throw new Error('no message exists with id ' + id);
+  personByName: ({ name }) => {
+    if (!people[name]) {
+      throw new Error('no message exists with name ' + name);
     }
-    // This replaces all old data, but some apps might want partial update.
-    fakeDatabase[id] = input;
-    return new Message(id, input);
-  },
+    return new Person(people[name]);
+  }
 };
 
 const app = express();
