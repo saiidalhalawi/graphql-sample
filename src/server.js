@@ -2,30 +2,37 @@ import express from 'express';
 import graphqlHTTP from 'express-graphql';
 import { buildSchema } from 'graphql';
 
+import { Person } from '../src/types/person';
+
 import people from '../src/data/people';
 
 const schema = buildSchema(`
   type Person {
-    id: ID!
-    name: String
+    id: Int!
+    name: String!
     nicknames: [String]
     born_around: Int
     died_around: Int
-    houses: [House]
-    titles: [Title]
+    house_names: [String]
+    title_titles: [String]
+    father_name: String
+    mother_name: String
+    spouse_names: [String]
+    issue_names: [String]
     father: Person
     mother: Person
+    spouses: [Person]
     issues: [Person]
   }
 
   type Title {
     id: ID!
-    name: String
+    name: String!
   }
 
   type House {
     id: ID!
-    name: String
+    name: String!
   }
 
   type Query {
@@ -35,25 +42,11 @@ const schema = buildSchema(`
   }
 `);
 
-class Person {
-  constructor(p) {
-    this.name = p.name;
-    this.nicknames = p.nicknames;
-    this.born_around = p.born_around;
-    this.died_around = p.died_around;
-    this.houses = p.houses;
-    this.titles = p.titles;
-    this.father = p.father;
-    this.mother = p.mother;
-    this.issues = p.issues;
-  }
-};
-
 const root = {
   people: () => {
     let result = []
-    for (let name in people) {
-      result.push(new Person(people[name]))
+    for (let personsName in people) {
+      result.push(new Person(people[personsName], people))
     }
     return result;
   },
@@ -61,10 +54,13 @@ const root = {
     let result = []
     for (let personsName in people) {
       if (personsName.includes(name)) {
-        result.push(new Person(people[personsName]))
+        result.push(new Person(people[personsName], people))
       }
     }
     return result;
+  },
+  title: ({ name }) => {
+    return name;
   }
 };
 
