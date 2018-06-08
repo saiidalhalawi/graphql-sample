@@ -3,8 +3,10 @@ import graphqlHTTP from 'express-graphql';
 import { buildSchema } from 'graphql';
 
 import { Person } from '../src/types/person';
+import { House } from '../src/types/house';
 
 import people from '../src/data/people';
+import houses from '../src/data/houses';
 
 const schema = buildSchema(`
   type Person {
@@ -14,6 +16,7 @@ const schema = buildSchema(`
     born_around: Int
     died_around: Int
     house_names: [String]
+    houses: [House]
     title_titles: [String]
     father_name: String
     mother_name: String
@@ -26,19 +29,19 @@ const schema = buildSchema(`
   }
 
   type Title {
-    id: ID!
+    id: Int!
     name: String!
   }
 
   type House {
-    id: ID!
+    id: Int!
     name: String!
   }
 
   type Query {
     people: [Person]
     peopleByName(name: String!): [Person]
-    title(name: String): [Title]
+    house(name: String): [House]
   }
 `);
 
@@ -46,7 +49,7 @@ const root = {
   people: () => {
     let result = []
     for (let personsName in people) {
-      result.push(new Person(people[personsName], people))
+      result.push(new Person(people[personsName], people, houses))
     }
     return result;
   },
@@ -54,12 +57,12 @@ const root = {
     let result = []
     for (let personsName in people) {
       if (personsName.includes(name)) {
-        result.push(new Person(people[personsName], people))
+        result.push(new Person(people[personsName], people, houses))
       }
     }
     return result;
   },
-  title: ({ name }) => {
+  house: ({ name }) => {
     return name;
   }
 };

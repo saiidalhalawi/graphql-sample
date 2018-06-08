@@ -1,6 +1,7 @@
 class Person {
-  constructor(person, people) {
+  constructor(person, people, houses) {
     this.people = people;
+    this.houses = houses;
     this.id = person.id;
     this.name = person.name;
     this.nicknames = person.nicknames;
@@ -14,10 +15,16 @@ class Person {
     this.issue_names = person.issue_names;
   }
 
-  // houses() {
-  //   return houses;
-  // }
-  //
+  houses() {
+    let result = []
+    for (const house_name in this.house_names) {
+      if (this.houses[house_name]) {
+        result.push(this.houses[house_name]);
+      }
+    }
+    return result;
+  }
+
   // titles() {
   //   return titles;
   // }
